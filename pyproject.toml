@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "photoguard-open"
+version = "0.1.0"
+description = "Open-source photographic preview protection toolkit"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{name = "PhotoGuard Contributors"}]
+dependencies = ["Pillow>=10.0,<13"]
+
+[project.scripts]
+photoguard = "photoguard.cli:main"
+photoguard-gui = "photoguard.gui:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
