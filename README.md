@@ -106,3 +106,12 @@ photoguard attack-test "C:\Fotos\original.jpg" "C:\Relatorios\inpaint" --local-i
 ```
 
 A máscara é inferida por diferença dos pixels entre prévia e original reduzido. Ela é imprecisa devido à compressão e outras alterações; uma máscara branca-preto real pode ser fornecida com `--mask`. Não há pesos de IA, métricas de legibilidade de logo, classificação de proteção, integração com sites de venda ou promessa de impedir remoção. Testar somente imagens próprias ou autorizadas.
+
+## Windows - iniciar com duplo clique
+
+Depois de extrair o ZIP, abra a pasta `PhotoGuard` e clique em `iniciar_windows.bat`.
+Este script verifica a disponibilidade do Python, instala dependencias e abre a interface.
+Se houver um erro, o terminal permanece aberto para permitir que voce copie a mensagem.
+Para compilar, use `build_windows.bat` (gera `dist/PhotoGuard.exe` no Windows).
+
+Para executar testes diretamente do repositorio (sem instalacao editavel), use `py -m pip install pytest` e `py -m pytest -q`.
