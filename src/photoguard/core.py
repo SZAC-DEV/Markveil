@@ -22,9 +22,12 @@ class Options:
     grid: bool = True
     logo_path: str = ''  # Optional transparent PNG, repeated as overlay
     logo_scale: int = 32  # Percentage of preview width per watermark tile
+    protection: str = 'adaptive'  # classic | adaptive | strong
     blur: float = 0.0  # Reserved for later experimental processing; intentionally unused
 
     def validate(self):
+        if self.protection not in ('classic', 'adaptive', 'strong'):
+            raise ValueError('Proteção inválida: classic, adaptive ou strong.')
         if not self.text.strip() or len(self.text) > 120:
             raise ValueError('Texto deve ter de 1 a 120 caracteres.')
         if not 320 <= self.max_size <= 3000:
@@ -111,6 +114,27 @@ def create_preview(source: Path, destination: Path, options: Options) -> dict:
             jitter = (i*13) % 17 - 8
             grid.line((0, y+jitter, w, y+w+jitter), fill=(245,245,245,38), width=max(1,w//1000))
             grid.line((0, y+jitter+w//4, w, y-w*3//4+jitter), fill=(0,0,0,28), width=1)
+    # Additional overlay distributed across tonal regions: not an adversarial guarantee.
+    # Design is deterministic and can be recomputed for reproducible evaluations.
+    if options.protection != 'classic':
+        accents = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+        drawer = ImageDraw.Draw(accents)
+        gap = max(46, min(w, h) // (options.density * (3 if options.protection == 'strong' else 2)))
+        thickness = 2 if options.protection == 'strong' else 1
+        for row, cy in enumerate(range(gap // 2, h, gap)):
+            for col, cx in enumerate(range(gap // 2, w, gap)):
+                # alternating high and low luminance contrast avoids all-white watermarks
+                sample = image.getpixel((min(w-1, cx), min(h-1, cy)))
+                luminance = (299 * sample[0] + 587 * sample[1] + 114 * sample[2]) // 1000
+                color = (14, 18, 29, min(200, options.opacity + 20)) if luminance > 125 else (255, 255, 255, min(205, options.opacity + 25))
+                offset = ((row * 19 + col * 31) % 17) - 8
+                radius = max(5, gap // (5 if options.protection == 'strong' else 7))
+                x, y = cx + offset, cy
+                drawer.line((x-radius, y, x+radius, y), fill=color, width=thickness)
+                drawer.line((x, y-radius, x, y+radius), fill=color, width=thickness)
+                if options.protection == 'strong':
+                    drawer.ellipse((x-2, y-2, x+2, y+2), fill=color)
+        overlay = Image.alpha_composite(overlay, accents)
     image = Image.alpha_composite(image.convert('RGBA'), overlay).convert('RGB')
     destination.parent.mkdir(parents=True, exist_ok=True)
     # Atomic write; never include source EXIF/GPS metadata.
@@ -139,7 +163,7 @@ def process_directory(input_dir: Path, output_dir: Path, options: Options, progr
     if input_dir == output_dir or output_dir.is_relative_to(input_dir):
         raise ValueError('Saída deve ficar fora da pasta dos originais para impedir reprocessamento.')
     photos = sorted(p for p in input_dir.rglob('*') if p.is_file() and p.suffix.lower() in SUPPORTED)
-    report = {'version':'0.3.0','images':[],'errors':[],'count':len(photos)}
+    report = {'version':'0.5.0','images':[],'errors':[],'count':len(photos)}
     for index, photo in enumerate(photos, 1):
         relative = photo.relative_to(input_dir)
         # Preserve folder hierarchy; include source extension to avoid JPG/PNG filename collisions.

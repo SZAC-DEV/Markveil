@@ -6,6 +6,7 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
 import tempfile
+from .comparison import compare_profiles
 from .benchmark import benchmark_photo
 from .attack_lab import attack_test
 from .core import create_preview
@@ -27,6 +28,7 @@ class App(tk.Tk):
         self.grid_on=tk.BooleanVar(value=True)
         self.logo=tk.StringVar()
         self.logo_scale=tk.StringVar(value='32')
+        self.protection=tk.StringVar(value='adaptive')
         style=ttk.Style(self)
         style.theme_use('clam')
         style.configure('TFrame',background='#101827')
@@ -53,8 +55,11 @@ class App(tk.Tk):
         self._file(frame,'Marca personalizada PNG (opcional)',self.logo)
         ttk.Label(frame,text='Largura da marca PNG (% da imagem, 10–65)').pack(anchor='w',pady=(8,2))
         ttk.Entry(frame,textvariable=self.logo_scale,width=12).pack(anchor='w')
+        ttk.Label(frame,text='Perfil de proteção').pack(anchor='w',pady=(8,2))
+        ttk.Combobox(frame,textvariable=self.protection,values=['classic','adaptive','strong'],state='readonly').pack(fill='x')
         ttk.Checkbutton(frame,text='Adicionar grade geométrica de proteção',variable=self.grid_on).pack(anchor='w')
         ttk.Button(frame,text='VISUALIZAR PRIMEIRA FOTO',command=self.preview).pack(fill='x',pady=(12,0))
+        ttk.Button(frame,text='COMPARAR 3 PERFIS',command=self.compare).pack(fill='x',pady=(8,0))
         ttk.Button(frame,text='AVALIAR RESISTÊNCIA A COMPRESSÃO (NÃO IA)',command=self.evaluate).pack(fill='x',pady=(8,0))
         ttk.Button(frame,text='TESTAR RESULTADO DE IA EXTERNA',command=self.external_attack).pack(fill='x',pady=(8,0))
         self.go=ttk.Button(frame,text='GERAR PRÉVIAS PROTEGIDAS',command=self.start)
@@ -78,7 +83,7 @@ class App(tk.Tk):
         ttk.Button(line,text='PNG...',command=lambda:var.set(filedialog.askopenfilename(filetypes=[('PNG','*.png')]) or var.get())).pack(side='right',padx=(7,0))
 
     def _build_processing_options(self):
-        opts=Options(text=self.mark.get(),max_size=int(self.size.get()),opacity=int(self.opacity.get()),density=int(self.density.get()),grid=self.grid_on.get(),logo_path=self.logo.get(),logo_scale=int(self.logo_scale.get()))
+        opts=Options(text=self.mark.get(),max_size=int(self.size.get()),opacity=int(self.opacity.get()),density=int(self.density.get()),grid=self.grid_on.get(),logo_path=self.logo.get(),logo_scale=int(self.logo_scale.get()),protection=self.protection.get())
         opts.validate()
         return opts
 
@@ -103,6 +108,21 @@ class App(tk.Tk):
             label.pack(padx=10,pady=10)
         except (ValueError,OSError,TypeError) as e:
             messagebox.showerror('Prévia indisponível',str(e))
+
+    def compare(self):
+        try:
+            options=self._build_processing_options()
+            folder=Path(self.source.get())
+            from .core import SUPPORTED
+            photos=sorted(p for p in folder.rglob('*') if p.is_file() and p.suffix.lower() in SUPPORTED) if folder.is_dir() else []
+            if not photos:
+                raise ValueError('Escolha uma pasta com fotografias.')
+            path=filedialog.asksaveasfilename(title='Salvar comparação',defaultextension='.jpg',filetypes=[('JPEG','*.jpg')],initialfile='photoguard-comparacao.jpg')
+            if path:
+                compare_profiles(photos[0],Path(path),options)
+                messagebox.showinfo('Comparação salva',f'Comparação gerada em: {path}')
+        except (ValueError,OSError,TypeError) as exc:
+            messagebox.showerror('Falha na comparação',str(exc))
 
     def evaluate(self):
         try:

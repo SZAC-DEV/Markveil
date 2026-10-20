@@ -1,5 +1,6 @@
 import argparse
 import json
+from .comparison import compare_profiles
 from .benchmark import benchmark_photo
 from .attack_lab import attack_test
 from pathlib import Path
@@ -25,6 +26,16 @@ def main():
             check.error(str(exc))
         print(json.dumps(result,ensure_ascii=False,indent=2))
         return
+    if len(sys.argv) > 1 and sys.argv[1] == 'compare':
+        parser_compare=argparse.ArgumentParser(description='Comparação de três perfis de proteção')
+        parser_compare.add_argument('command',choices=['compare'])
+        parser_compare.add_argument('photo',type=Path)
+        parser_compare.add_argument('output',type=Path)
+        parser_compare.add_argument('--logo',default='')
+        args=parser_compare.parse_args()
+        output=compare_profiles(args.photo,args.output,Options(logo_path=args.logo))
+        print(f'Comparação salva em {output}')
+        return
     if len(sys.argv) > 1 and sys.argv[1] == 'benchmark':
         check=argparse.ArgumentParser(description='Avaliação local de compressão e redimensionamento (não IA)')
         check.add_argument('command', choices=['benchmark'])
@@ -46,9 +57,10 @@ def main():
     parser.add_argument('--quality',type=int,default=76)
     parser.add_argument('--logo',default='',help='PNG transparente de marca personalizada')
     parser.add_argument('--logo-scale',type=int,default=32,help='Largura do PNG em %% da prévia')
+    parser.add_argument('--protection', choices=['classic','adaptive','strong'], default='adaptive')
     parser.add_argument('--no-grid',action='store_true')
     args=parser.parse_args()
-    opts=Options(text=args.text,max_size=args.size,opacity=args.opacity,density=args.density,quality=args.quality,grid=not args.no_grid,logo_path=args.logo,logo_scale=args.logo_scale)
+    opts=Options(text=args.text,max_size=args.size,opacity=args.opacity,density=args.density,quality=args.quality,grid=not args.no_grid,logo_path=args.logo,logo_scale=args.logo_scale,protection=args.protection)
     try:
         result=process_directory(args.input,args.output,opts,print)
     except (ValueError,OSError) as exc:

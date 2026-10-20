@@ -121,3 +121,22 @@ Se houver um erro, o terminal permanece aberto para permitir que voce copie a me
 Para compilar, use `build_windows.bat` (gera `dist/PhotoGuard.exe` no Windows).
 
 Para executar testes diretamente do repositorio (sem instalacao editavel), use `py -m pip install pytest` e `py -m pytest -q`.
+
+
+## v0.5.0 — Perfis de proteção visual
+
+Novo controle **Perfil de proteção** na interface e `--protection classic|adaptive|strong` na CLI.
+
+- `classic`: marca textual/PNG repetida + grade opcional (comportamento anterior).
+- `adaptive` (padrão): adiciona pequenos traços contrastantes conforme a luminosidade local.
+- `strong`: maior densidade de traços e cruzes sobre a imagem.
+
+Os perfis adicionam **obstrução visual** às prévias. **Não são perturbações adversariais verificadas**, nem impedem a reconstrução por modelos generativos. O teste de compressão existente não mede proteção contra IA. Use a imagem original exclusivamente na entrega após pagamento e apenas prévias reduzidas para divulgação.
+
+### Exemplo de uso
+
+`photoguard "C:\Fotos" "C:\Previas" --protection strong --size 1100`
+
+
+### Comparar perfis lado a lado
+Na interface, clique em **COMPARAR 3 PERFIS**. Uma montagem JPEG é salva com os perfis clássico, adaptativo e forte. Também disponível pelo terminal: `photoguard compare foto.jpg comparacao.jpg`.
