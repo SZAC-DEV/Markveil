@@ -8,6 +8,19 @@ from .core import Options, process_directory
 
 def main():
     import sys
+    if len(sys.argv)>1 and sys.argv[1] in ('gui','mcp','version','protect'):
+        cmd = sys.argv.pop(1)
+        if cmd == 'gui':
+            from .gui import main as launch
+            return launch()
+        if cmd == 'mcp':
+            from .mcp_server import main as serve
+            return serve()
+        if cmd == 'version':
+            from importlib.metadata import version
+            print('PhotoGuard', version('photoguard-open'))
+            return
+        # protect is a readable alias for the original directory processing command
     if len(sys.argv) > 1 and sys.argv[1] == 'gallery-test':
         from .gallery_lab import gallery_test
         lab = argparse.ArgumentParser(description='Simula compressão e redimensionamento de galerias (NÃO testa remoção por IA)')

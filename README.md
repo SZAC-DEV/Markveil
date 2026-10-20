@@ -1,3 +1,66 @@
+# PhotoGuard Studio v0.8.0
+
+Toolkit **open source (MIT)** para criação local de prévias fotográficas com marca d’água, CLI e servidor MCP opcional.
+
+> **Eficácia:** marcas d'água e perturbações não garantem resistência contra IA. Os relatos preliminares de testes do usuário não constituem benchmark científico. A integração com plataformas comerciais não é automática.
+
+## Instalação no Windows 10/11
+
+1. Instale Python 3.11 ou mais novo e habilite o comando `py`.
+2. Extraia o ZIP, entre em `PhotoGuard-v0.8.0` e execute `iniciar_windows.bat`.
+3. Alternativa: `py -m pip install -e .` e `py -m photoguard.gui`.
+
+A primeira instalação exige acesso à internet para obter Pillow e dependências. Não é necessário ter GPU para o módulo principal.
+
+## CLI
+
+```powershell
+photoguard --help
+photoguard protect "C:\Fotos\Originais" "C:\Fotos\Previas" --protection strong --logo "C:\Fotos\logo.png"
+photoguard compare "C:\Fotos\Originais\foto.jpg" "C:\Fotos\comparacao.jpg"
+photoguard gallery-test "C:\Fotos\Originais\foto.jpg" "C:\Fotos\Relatorios" --protection adaptive
+photoguard benchmark "C:\Fotos\Originais\foto.jpg" "C:\Fotos\Benchmark"
+photoguard gui
+photoguard version
+```
+
+O processamento legado `photoguard ORIGEM DESTINO` permanece compatível.
+
+## Servidor MCP (stdio)
+
+Instale o SDK opcional com `py -m pip install -e ".[mcp]"` e execute `photoguard mcp` ou `py -m photoguard.mcp_server`. O servidor usa **stdio**, não publica uma porta HTTP e não exige API paga. Ferramentas disponíveis:
+
+- `preview_file(source, destination, text, protection, size, logo)`
+- `preview_folder(source, destination, text, protection, size, logo)`
+- `compare_file(source, destination)`
+- `test_gallery(source, destination, protection)`
+
+Configure seu cliente MCP para executar o Python **do mesmo ambiente em que instalou o pacote**, com argumento `-m photoguard.mcp_server`. Exemplo em `examples/mcp-client-config.json` (ajuste o caminho do Python).
+
+**Segurança:** o servidor aceita caminhos locais determinados pelo cliente MCP. Conecte apenas clientes confiáveis, pois eles poderão ler fotos e gravar saídas no computador. As operações impedem sobrescrita direta da origem; não oferecem sandbox de diretórios. Não execute um servidor MCP exposto à rede.
+
+## Interface
+
+Redesenho visual escuro com duas abas: **Proteger fotos** e **Laboratórios**. Seleção de pasta, PNG, três perfis, prévia, comparação, progresso em log e resultados separados. A interface Tkinter é executável em Windows/Linux com suporte gráfico, mas foi testada aqui somente por verificação estática; não foi validada visualmente no Windows.
+
+## Validar e contribuir
+
+```powershell
+py -m pip install pytest
+$env:PYTHONPATH="src"
+py -m pytest -q
+```
+
+Os 29 testes foram executados com êxito no ambiente de desenvolvimento em Linux. O SDK MCP opcional e a interface do Windows não foram executados em teste ponta a ponta. Use issues e pull requests para reportar erros, compatibilidade com galerias e benchmarks reproduzíveis.
+
+## Origem da pesquisa
+
+A funcionalidade adversarial anterior é experimental e inspirada conceitualmente no [MadryLab PhotoGuard](https://github.com/madrylab/photoguard), projeto acadêmico independente de mesmo nome. Este repositório não é uma edição oficial do projeto MadryLab. Antes de publicar amplamente, considere um nome distinto para evitar confusão.
+
+---
+
+## Histórico e documentação técnica anterior
+
 # PhotoGuard v0.6 — Módulo adversarial experimental
 
 **Novidade:** módulo opcional de perturbação adversarial de prévias, inspirado conceitualmente na pesquisa [MadryLab/photoguard](https://github.com/madrylab/photoguard). **Não incorpora código deles e NÃO reproduz fielmente seu encoder attack.** Este protótipo maximiza a distância entre representações latentes de um VAE pré-treinado, com perturbação limitada por `epsilon`. Nenhuma alegação de eficácia contra remoção de marcas d’água por IA foi validada.

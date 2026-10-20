@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "photoguard": {
+      "command": "C:\\CAMINHO\\PARA\\python.exe",
+      "args": ["-m", "photoguard.mcp_server"]
+    }
+  }
+}

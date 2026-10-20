@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "photoguard-open"
-version = "0.7.0"
+version = "0.8.0"
 description = "Open-source photographic preview protection toolkit"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -15,10 +15,12 @@ dependencies = ["Pillow>=10.0,<13"]
 [project.scripts]
 photoguard = "photoguard.cli:main"
 photoguard-gui = "photoguard.gui:main"
+photoguard-mcp = "photoguard.mcp_server:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [project.optional-dependencies]
+mcp = ["mcp>=1.12,<2"]
 attack = ["opencv-python-headless>=4.8,<5", "numpy>=1.24,<3"]
 adversarial = ["torch>=2.1", "diffusers>=0.30", "transformers>=4.38,<5", "safetensors>=0.4", "accelerate>=0.25", "numpy>=1.24,<3"]
