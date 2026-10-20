@@ -3,8 +3,8 @@ import tempfile
 import unittest
 from pathlib import Path
 from PIL import Image
-from photoguard.attack_lab import attack_test
-from photoguard.core import Options, _sha256
+from markveil.attack_lab import attack_test
+from markveil.core import Options, _sha256
 
 class TestAttackLab(unittest.TestCase):
     def test_external_attack_report_preserves_original(self):

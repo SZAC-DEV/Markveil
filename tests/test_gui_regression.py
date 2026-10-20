@@ -1,6 +1,6 @@
 """Prevent shadowing Tkinter internals (especially Tk._options)."""
 import tkinter as tk
-from photoguard.gui import App
+from markveil.gui import App
 
 
 def test_app_does_not_override_tk_methods_except_init():

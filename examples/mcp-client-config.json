@@ -1,8 +1,1 @@
-{
-  "mcpServers": {
-    "photoguard": {
-      "command": "C:\\CAMINHO\\PARA\\python.exe",
-      "args": ["-m", "photoguard.mcp_server"]
-    }
-  }
-}
+{"mcpServers":{"markveil":{"command":"python","args":["-m","markveil.mcp_server"]}}}

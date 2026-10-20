@@ -1,7 +1,7 @@
 from pathlib import Path
 from PIL import Image
 import pytest
-from photoguard.core import Options, create_preview, process_directory
+from markveil.core import Options, create_preview, process_directory
 
 @pytest.mark.parametrize("profile", ["classic", "adaptive", "strong"])
 def test_profile_generates_distinct_preview(tmp_path, profile):
@@ -31,7 +31,7 @@ def test_invalid_profile():
 
 
 def test_compare_profiles(tmp_path):
-    from photoguard.comparison import compare_profiles
+    from markveil.comparison import compare_profiles
     source=tmp_path / 'src.jpg'
     Image.new('RGB',(500,350),(120,90,175)).save(source)
     output=tmp_path/'comparison.jpg'

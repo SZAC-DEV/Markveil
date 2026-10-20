@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from PIL import Image
-from photoguard.core import Options, create_preview, process_directory, _sha256
+from markveil.core import Options, create_preview, process_directory, _sha256
 
 class TestCore(unittest.TestCase):
     def test_generate_and_preserve_original(self):

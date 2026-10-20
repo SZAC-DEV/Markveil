@@ -3,19 +3,19 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "photoguard-open"
-version = "0.8.0"
+name = "markveil"
+version = "0.9.0"
 description = "Open-source photographic preview protection toolkit"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-authors = [{name = "PhotoGuard Contributors"}]
+authors = [{name = "Markveil Contributors"}]
 dependencies = ["Pillow>=10.0,<13"]
 
 [project.scripts]
-photoguard = "photoguard.cli:main"
-photoguard-gui = "photoguard.gui:main"
-photoguard-mcp = "photoguard.mcp_server:main"
+markveil = "markveil.cli:main"
+markveil-gui = "markveil.gui:main"
+markveil-mcp = "markveil.mcp_server:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

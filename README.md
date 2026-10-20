@@ -1,243 +1,59 @@
-# PhotoGuard Studio v0.8.0
+# Markveil Studio
 
-Toolkit **open source (MIT)** para criação local de prévias fotográficas com marca d’água, CLI e servidor MCP opcional.
+**Open-source, local-first photographic preview protection.**
 
-> **Eficácia:** marcas d'água e perturbações não garantem resistência contra IA. Os relatos preliminares de testes do usuário não constituem benchmark científico. A integração com plataformas comerciais não é automática.
+Markveil generates watermarked preview photographs for photographers and galleries without modifying source files. It offers a desktop application, CLI, optional MCP server and experiments for local gallery transformations. **No watermark is guaranteed to survive generative removal tools.**
 
-## Instalação no Windows 10/11
+> [!IMPORTANT]
+> Markveil is independent of MadryLab's PhotoGuard research project. Adversarial experiments are optional and not verified protection claims. Third-party platforms may generate their own watermarks and might not permit custom previews.
 
-1. Instale Python 3.11 ou mais novo e habilite o comando `py`.
-2. Extraia o ZIP, entre em `PhotoGuard-v0.8.0` e execute `iniciar_windows.bat`.
-3. Alternativa: `py -m pip install -e .` e `py -m photoguard.gui`.
+## Quick start · Windows
 
-A primeira instalação exige acesso à internet para obter Pillow e dependências. Não é necessário ter GPU para o módulo principal.
+Requires Python 3.10+. Extract the repository then double-click `iniciar_windows.bat`.
+
+```powershell
+py -m pip install -e .
+markveil gui
+```
 
 ## CLI
 
 ```powershell
-photoguard --help
-photoguard protect "C:\Fotos\Originais" "C:\Fotos\Previas" --protection strong --logo "C:\Fotos\logo.png"
-photoguard compare "C:\Fotos\Originais\foto.jpg" "C:\Fotos\comparacao.jpg"
-photoguard gallery-test "C:\Fotos\Originais\foto.jpg" "C:\Fotos\Relatorios" --protection adaptive
-photoguard benchmark "C:\Fotos\Originais\foto.jpg" "C:\Fotos\Benchmark"
-photoguard gui
-photoguard version
+markveil protect "C:\Fotos" "C:\Previas" --protection strong
+markveil compare "C:\Fotos\foto.jpg" "C:\Relatorios\comparison.jpg"
+markveil gallery-test "C:\Fotos\foto.jpg" "C:\Relatorios"
+markveil benchmark "C:\Fotos\foto.jpg" "C:\Relatorios"
+markveil --help
 ```
 
-O processamento legado `photoguard ORIGEM DESTINO` permanece compatível.
+`classic`, `adaptive` and `strong` are visual watermark presets, not quantitatively certified AI resistance levels. Output must be separate from originals.
 
-## Servidor MCP (stdio)
-
-Instale o SDK opcional com `py -m pip install -e ".[mcp]"` e execute `photoguard mcp` ou `py -m photoguard.mcp_server`. O servidor usa **stdio**, não publica uma porta HTTP e não exige API paga. Ferramentas disponíveis:
-
-- `preview_file(source, destination, text, protection, size, logo)`
-- `preview_folder(source, destination, text, protection, size, logo)`
-- `compare_file(source, destination)`
-- `test_gallery(source, destination, protection)`
-
-Configure seu cliente MCP para executar o Python **do mesmo ambiente em que instalou o pacote**, com argumento `-m photoguard.mcp_server`. Exemplo em `examples/mcp-client-config.json` (ajuste o caminho do Python).
-
-**Segurança:** o servidor aceita caminhos locais determinados pelo cliente MCP. Conecte apenas clientes confiáveis, pois eles poderão ler fotos e gravar saídas no computador. As operações impedem sobrescrita direta da origem; não oferecem sandbox de diretórios. Não execute um servidor MCP exposto à rede.
-
-## Interface
-
-Redesenho visual escuro com duas abas: **Proteger fotos** e **Laboratórios**. Seleção de pasta, PNG, três perfis, prévia, comparação, progresso em log e resultados separados. A interface Tkinter é executável em Windows/Linux com suporte gráfico, mas foi testada aqui somente por verificação estática; não foi validada visualmente no Windows.
-
-## Validar e contribuir
+## MCP (stdio)
 
 ```powershell
-py -m pip install pytest
-$env:PYTHONPATH="src"
+py -m pip install -e ".[mcp]"
+markveil mcp
+```
+
+Tools: `preview_file`, `preview_folder`, `compare_file`, `test_gallery`. Local MCP clients can request filesystem operations; **connect only trusted clients**. See `examples/mcp-client-config.json`.
+
+## Development
+
+```powershell
+py -m pip install -e . pytest
 py -m pytest -q
 ```
 
-Os 29 testes foram executados com êxito no ambiente de desenvolvimento em Linux. O SDK MCP opcional e a interface do Windows não foram executados em teste ponta a ponta. Use issues e pull requests para reportar erros, compatibilidade com galerias e benchmarks reproduzíveis.
+Optional attack tests: `pip install -e ".[attack]"`. Optional adversarial experimentation: `pip install -e ".[adversarial]"` (large dependencies/model download).
 
-## Origem da pesquisa
+## Windows executable
 
-A funcionalidade adversarial anterior é experimental e inspirada conceitualmente no [MadryLab PhotoGuard](https://github.com/madrylab/photoguard), projeto acadêmico independente de mesmo nome. Este repositório não é uma edição oficial do projeto MadryLab. Antes de publicar amplamente, considere um nome distinto para evitar confusão.
+Run `build_windows.bat` on Windows, which invokes PyInstaller. The resulting Windows executable has not been validated in this environment.
 
----
+## Contributing
 
-## Histórico e documentação técnica anterior
+Read [CONTRIBUTING.md](CONTRIBUTING.md). Changes should include tests and avoid overwriting user images. Use clearly stated metrics when discussing AI-resistance.
 
-# PhotoGuard v0.6 — Módulo adversarial experimental
+## License
 
-**Novidade:** módulo opcional de perturbação adversarial de prévias, inspirado conceitualmente na pesquisa [MadryLab/photoguard](https://github.com/madrylab/photoguard). **Não incorpora código deles e NÃO reproduz fielmente seu encoder attack.** Este protótipo maximiza a distância entre representações latentes de um VAE pré-treinado, com perturbação limitada por `epsilon`. Nenhuma alegação de eficácia contra remoção de marcas d’água por IA foi validada.
-
-## Uso no Windows
-
-1. Para as funções normais, execute `iniciar_windows.bat` (continua leve, sem IA).
-2. Para a nova opção **PROTEÇÃO ADVERSARIAL EXPERIMENTAL**, instale manualmente em um terminal na pasta do programa:
-   `py -3 -m pip install -e ".[adversarial]"`
-3. Opcionalmente, instale PyTorch com suporte CUDA seguindo [as instruções oficiais](https://pytorch.org/get-started/locally/). A instalação genérica do pip pode não incluir a versão CUDA adequada. CPU funciona, mas é lenta.
-4. Gere uma prévia com marca d'água usando o PhotoGuard. Depois clique no botão experimental e selecione a **prévia**, nunca a foto original.
-5. A primeira execução baixa o VAE do Hugging Face; requer internet, armazenamento e respeito à licença do modelo. Depois o processamento é local.
-
-Também é possível usar:
-
-```powershell
-py -3 -m photoguard.adversarial "C:\Previas\foto.jpg" "C:\Previas\foto-protegida.png" --epsilon 6 --steps 20 --size 512 --device auto
-```
-
-**Limitações relevantes:** a imagem é redimensionada para até 512 pixels e cortada até múltiplos de 8; o resultado é PNG; otimizar contra um VAE não garante transferibilidade contra IAs modernas. Processamento pesado requer GPU ou tempo de CPU. A saída pode ficar pior após compressão/redimensionamento por plataformas comerciais. Nunca envie original ou arquivo já marcado para serviços que exijam o original intacto.
-
-**Para testar resistência real:** execute a ferramenta de remoção de sua escolha sobre as prévias e use o laboratório já existente em `TESTAR RESULTADO DE IA EXTERNA`. Não confunda alteração do embedding com resistência comprovada.
-
----
-
-## v0.4.2 — correção de inicialização
-
-Corrigido o conflito entre `App._options()` e `tkinter.Tk._options()`, que impedia a abertura da GUI no Python 3.13. Execute `iniciar_windows.bat` no Windows.
-
-**Nota:** esta correção foi validada com testes automatizados e verificação estática; não foi testada com exibição gráfica real em Windows.
-
-# PhotoGuard 🛡️
-
-**Ferramenta open source para gerar prévias fotográficas com marcas d'água reforçadas, sem alterar os originais.**
-
-> **Aviso:** nenhuma marca d'água visível garante proteção contra remoção por IA. A v0.2 utiliza texto distribuído, grades e redução de resolução. Não implementa proteção adversarial validada. Não é uma plataforma de vendas e não contorna políticas de terceiros.
-
-## Funcionalidades (v0.4)
-- PNG transparente personalizado repetido na prévia, com escala e opacidade ajustáveis.
-- Botão de visualização da primeira foto antes de processar a pasta.
-- Interface desktop com Tkinter (Windows/Linux/macOS com Tk disponível).
-- Linha de comando para processamento em lote, inclusive subpastas.
-- Marca d'água textual repetida e girada, com grade geométrica opcional.
-- Exportação JPEG com resolução e compressão configuráveis.
-- Arquivos originais preservados; saída obrigatoriamente fora da árvore de entrada.
-- Metadados EXIF/GPS não propagados para as prévias.
-- Relatório JSON de processamento, hashes SHA-256 dos originais.
-- 100% local e sem API paga.
-
-## Instalação
-É necessário Python 3.10+ (Windows 10/11 ou Linux).
-
-```bash
-python -m venv .venv
-# Windows: .venv\\Scripts\\activate
-# Linux/macOS: source .venv/bin/activate
-pip install -e .
-photoguard-gui
-```
-
-Se `photoguard-gui` não estiver disponível, execute `python -m photoguard.gui`.
-
-## Linha de comando
-```bash
-photoguard "C:/Fotos/Originais" "C:/Fotos/Previas" --text "© Meu Estúdio · PRÉVIA" --size 1100 --density 5 --opacity 145 --logo "C:/Fotos/logo.png" --logo-scale 30
-```
-
-Detalhes: `photoguard --help`.
-
-## Gerar .exe para Windows
-Execute os comandos **no próprio Windows**. Um `.exe` Windows não é gerado diretamente pelo PyInstaller rodando em Linux/Termux.
-
-```powershell
-pip install -e . pyinstaller
-pyinstaller --noconfirm --clean --onefile --windowed --name PhotoGuard --collect-all PIL --paths src launcher.py
-```
-
-O executável ficará em `dist/PhotoGuard.exe`. O arquivo `launcher.py` já está incluído. Pode exigir validação de antivírus e testes em instalações limpas.
-
-## Compatibilidade com plataformas
-
-| Plataforma | Estado no projeto |
-|---|---|
-| Fotop | Exportar marca PNG é uma possível integração futura; a v0.2 usa PNG como sobreposição nas prévias, mas **não** gera modelos especiais para envio à plataforma. |
-| Banlek | **Não enviar** arquivos já marcados; os termos proíbem e a plataforma aplica sua proteção. Sem integração nesta versão. |
-| Fotto | Fluxo externo não integrado; verifique suporte oficial para prévias customizadas. |
-| Outros sites | É possível usar as prévias onde o serviço admite imagem de prévia diferente do original; caso contrário, não existe integração automática. |
-
-## Segurança / limites
-- O app não gerencia compra, pagamento, autenticação ou entrega de originais.
-- Imagens exibidas publicamente podem ser capturadas por screenshot e manipuladas por IA.
-- Não coloque originais em diretório público do site; armazene-os de forma privada e entregue somente com autorização.
-- Relatório contém caminhos locais e hashes, não deve ser publicado inadvertidamente.
-- Recomenda-se manter cópias de segurança dos originais, separadas da pasta de processamento.
-
-## Próximos marcos
-- v0.3: templates configuráveis e exportação de marca PNG para plataformas compatíveis.
-- v0.3: testes padronizados contra inpainting, remoção por IA e compressão, com métricas antes de alegar resistência.
-- v0.4: API local e adaptadores oficiais conforme contratos das plataformas.
-
-## Testes
-```bash
-pip install -e .
-python -m unittest discover -s tests -v
-```
-
-## Contribuição e licença
-Issues, PRs e testes de campo são bem-vindos. MIT — consulte LICENSE.
-
-## Versão 0.3 — Avaliação local de transformações
-
-O botão **AVALIAR RESISTÊNCIA A COMPRESSÃO (NÃO IA)** escolhe a primeira fotografia da pasta e cria `index.html`, `benchmark.json` e quatro imagens para comparação em uma pasta externa à origem. O relatório mede diferença média de pixels na prévia, após duas compressões JPEG e redução de 50% da resolução. **Não é teste de remoção por IA, não mede se texto continua legível e não comprova resistência adversarial.**
-
-Na linha de comando:
-
-```powershell
-photoguard benchmark "C:\Fotos\ensaio.jpg" "C:\Relatorios\ensaio" --text "PRÉVIA NÃO COMPRADA"
-```
-
-A pasta de relatório precisa ficar fora da pasta da foto original. Não há upload externo, reconhecimento facial ou conexão com plataformas comerciais. Integração com Fotto, Fotop e Banlek permanece condicionada às APIs e políticas oficiais.
-
-## v0.4 — Laboratório de ataques (experimental)
-
-**Novo:** CLI `attack-test`, botão **TESTAR RESULTADO DE IA EXTERNA** na interface gráfica, e relatório HTML/JSON com prévia, imagem pós-ataque, máscara aproximada e métricas (MAE, PSNR, redução relativa do erro). Permite testar uma imagem produzida manualmente em qualquer ferramenta de IA, sem API paga e sem envio automático de fotos.
-
-```powershell
-photoguard attack-test "C:\Fotos\original.jpg" "C:\Relatorios\ataque" --attacked "C:\Fotos\editada_por_ia.png"
-```
-
-**Limitação importante:** a edição externa deve ter o mesmo enquadramento; a ferramenta redimensiona para comparar, mas mudanças de corte e conteúdo tornam as métricas pouco úteis. O script cria sua própria prévia marcada antes da comparação: para testar uma remoção real, a imagem fornecida deve ter sido criada a partir da prévia PhotoGuard com as **mesmas opções de marca e tamanho**. Para logotipo, adicione `--logo "C:\Fotos\logo.png"`; o comando usa o tamanho padrão de 1100 px. Para testes rigorosos de ajustes diferentes, exporte a prévia primeiro usando as mesmas opções ou desenvolva um parâmetro para carregar a prévia marcada existente.
-
-Teste opcional com *inpainting clássico* OpenCV (Telea; **não é IA generativa**):
-
-```powershell
-pip install -e ".[attack]"
-photoguard attack-test "C:\Fotos\original.jpg" "C:\Relatorios\inpaint" --local-inpaint
-```
-
-A máscara é inferida por diferença dos pixels entre prévia e original reduzido. Ela é imprecisa devido à compressão e outras alterações; uma máscara branca-preto real pode ser fornecida com `--mask`. Não há pesos de IA, métricas de legibilidade de logo, classificação de proteção, integração com sites de venda ou promessa de impedir remoção. Testar somente imagens próprias ou autorizadas.
-
-## Windows - iniciar com duplo clique
-
-Depois de extrair o ZIP, abra a pasta `PhotoGuard` e clique em `iniciar_windows.bat`.
-Este script verifica a disponibilidade do Python, instala dependencias e abre a interface.
-Se houver um erro, o terminal permanece aberto para permitir que voce copie a mensagem.
-Para compilar, use `build_windows.bat` (gera `dist/PhotoGuard.exe` no Windows).
-
-Para executar testes diretamente do repositorio (sem instalacao editavel), use `py -m pip install pytest` e `py -m pytest -q`.
-
-
-## v0.5.0 — Perfis de proteção visual
-
-Novo controle **Perfil de proteção** na interface e `--protection classic|adaptive|strong` na CLI.
-
-- `classic`: marca textual/PNG repetida + grade opcional (comportamento anterior).
-- `adaptive` (padrão): adiciona pequenos traços contrastantes conforme a luminosidade local.
-- `strong`: maior densidade de traços e cruzes sobre a imagem.
-
-Os perfis adicionam **obstrução visual** às prévias. **Não são perturbações adversariais verificadas**, nem impedem a reconstrução por modelos generativos. O teste de compressão existente não mede proteção contra IA. Use a imagem original exclusivamente na entrega após pagamento e apenas prévias reduzidas para divulgação.
-
-### Exemplo de uso
-
-`photoguard "C:\Fotos" "C:\Previas" --protection strong --size 1100`
-
-
-### Comparar perfis lado a lado
-Na interface, clique em **COMPARAR 3 PERFIS**. Uma montagem JPEG é salva com os perfis clássico, adaptativo e forte. Também disponível pelo terminal: `photoguard compare foto.jpg comparacao.jpg`.
-
-## v0.7.0 — Gallery Lab (simulação de publicação)
-
-Adicionado o comando `gallery-test` e o botão **SIMULAR PUBLICAÇÃO EM GALERIAS (NÃO IA)**.
-O laboratório simula JPEG com qualidades 85, 60 e 35, além de redimensionamentos a 75% e 50% combinados com JPEG. Aplica as **mesmas** transformações a versões marcadas e limpas da fotografia para estimar a diferença residual por MAE (0–255). Cria `index.html` e `gallery-report.json`, com prévias marcadas; **não exporta fotos originais** para a pasta do relatório.
-
-```powershell
-photoguard gallery-test "C:\Fotos\foto.jpg" "C:\RelatorioGallery" --protection strong
-```
-
-**Limitações:** diferença de pixels não demonstra a legibilidade da marca d’água ou eficácia contra qualquer modelo de IA. Nenhum modelo generativo é usado nesse teste. O PhotoGuard não integra automaticamente as galerias Fotto, Banlek ou Fotop e não altera suas prévias remotamente. O módulo adversarial da v0.6 continua opcional, sem comprovação experimental de eficácia contra modelos atuais.
-
-**Para desenvolvedores:** rode `python -m pip install -e ".[attack]"` e `python -m pytest -q` (instale `pytest` se necessário). O aplicativo é iniciado com `iniciar_windows.bat` no Windows ou `python -m photoguard.gui`. A interface gráfica deve ser validada em uma sessão desktop real no Windows; a suíte automatizada não substitui essa validação.
+MIT. Refer to [LICENSE](LICENSE).

@@ -1,3 +1,4 @@
-from photoguard.gui import main
-if __name__ == '__main__':
+from markveil.gui import main
+
+if __name__ == "__main__":
     main()

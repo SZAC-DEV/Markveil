@@ -3,8 +3,8 @@ import hashlib
 import json
 import pytest
 from PIL import Image
-from photoguard.core import Options
-from photoguard.gallery_lab import gallery_test
+from markveil.core import Options
+from markveil.gallery_lab import gallery_test
 
 
 def test_gallery_report_preserves_source(tmp_path):

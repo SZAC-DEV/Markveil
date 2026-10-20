@@ -2,8 +2,8 @@ import tempfile
 import unittest
 from pathlib import Path
 from PIL import Image
-from photoguard.benchmark import benchmark_photo
-from photoguard.core import _sha256, Options
+from markveil.benchmark import benchmark_photo
+from markveil.core import _sha256, Options
 
 class TestBenchmark(unittest.TestCase):
     def test_benchmark_outputs_and_original_unchanged(self):

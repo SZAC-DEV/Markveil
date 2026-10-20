@@ -1,7 +1,7 @@
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from photoguard.adversarial import AdversarialConfig, protect_preview
+from markveil.adversarial import AdversarialConfig, protect_preview
 
 class ExperimentalTests(unittest.TestCase):
     def test_valid_configuration(self):

@@ -1,7 +1,7 @@
 from pathlib import Path
 import pytest
 from PIL import Image
-from photoguard.mcp_server import safe_output, preview_file, preview_folder
+from markveil.mcp_server import safe_output, preview_file, preview_folder
 
 def test_prevent_overwrite(tmp_path):
     path=tmp_path/'a.jpg'
