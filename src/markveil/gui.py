@@ -6,6 +6,9 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
 import tempfile
+import sys
+from .settings import save_preset, load_preset, list_presets
+from .resources import sample_resources
 from .comparison import compare_profiles
 from .benchmark import benchmark_photo
 from .gallery_lab import gallery_test
@@ -17,6 +20,7 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title('Markveil Studio · Proteção de fotografias')
+        self._set_app_icon()
         self.geometry('1270x840')
         self.minsize(1080, 710)
         self.configure(bg='#0A101B')
@@ -33,6 +37,10 @@ class App(tk.Tk):
         self.protection = tk.StringVar(value='adaptive')
         self.selected_photo = tk.StringVar()
         self.preview_image = None
+        self.comparison_fraction = tk.DoubleVar(value=50)
+        self.compare_mode = tk.BooleanVar(value=True)
+        self.original_preview_path = None
+        self.protected_preview_path = None
         self.preview_path = None
         self.files = []
         self.finished = 0
@@ -64,7 +72,7 @@ class App(tk.Tk):
         brand=tk.Frame(header,bg=C['base']);brand.pack(side='left')
         tk.Label(brand,text='markveil',font=('Segoe UI',24,'bold'),bg=C['base'],fg=C['text']).pack(anchor='w')
         tk.Label(brand,text='PHOTO PROTECTION STUDIO  /  LOCAL FIRST',font=('Segoe UI',9),bg=C['base'],fg=C['muted']).pack(anchor='w')
-        tk.Label(header,text='OPEN SOURCE   ·   v0.10.0',font=('Segoe UI',10,'bold'),bg=C['base'],fg=C['accent']).pack(side='right')
+        tk.Label(header,text='OPEN SOURCE   ·   v0.11.0',font=('Segoe UI',10,'bold'),bg=C['base'],fg=C['accent']).pack(side='right')
         tabs=ttk.Notebook(self)
         tabs.pack(fill='both',expand=True,padx=22,pady=(0,8))
         protect=ttk.Frame(tabs,padding=15)
@@ -84,6 +92,7 @@ class App(tk.Tk):
         ttk.Label(left,text='Crie prévias protegidas',font=('Segoe UI',17,'bold')).pack(anchor='w',pady=(0,4))
         ttk.Label(left,text='Original intacto. Exportação local.',foreground=C['muted']).pack(anchor='w',pady=(0,12))
         self._folder(left,'FOTOGRAFIAS  /  Pasta de origem',self.source)
+        self._drop_area(left)
         ttk.Button(left,text='CARREGAR FOTOGRAFIAS  ↗',command=self.load_files).pack(fill='x',pady=(9,6))
         self._folder(left,'EXPORTAÇÃO  /  Pasta de destino',self.target)
         ttk.Label(left,text='MARCA D’ÁGUA',font=('Segoe UI',10,'bold'),foreground=C['accent']).pack(anchor='w',pady=(13,5))
@@ -99,6 +108,7 @@ class App(tk.Tk):
             ttk.Label(block,text=label,font=('Segoe UI',9)).pack(anchor='w',pady=(0,4))
             ttk.Entry(block,textvariable=var,width=7).pack(fill='x')
         ttk.Checkbutton(left,text='Grade de proteção adicional',variable=self.grid_on).pack(anchor='w',pady=(8,9))
+        self._preset_controls(left)
         ttk.Button(left,text='ATUALIZAR PRÉVIA',command=self.preview).pack(fill='x',pady=(4,5))
         self.go=ttk.Button(left,text='PROTEGER TODAS AS FOTOS  →',style='Accent.TButton',command=self.start)
         self.go.pack(fill='x',pady=(7,6))
@@ -119,8 +129,15 @@ class App(tk.Tk):
         self.image_canvas=tk.Canvas(right,bg='#101A28',highlightthickness=0,height=280)
         self.image_canvas.pack(fill='both',expand=True)
         self.image_canvas.bind('<Configure>',self._redraw_preview)
+        self.image_canvas.bind('<Button-1>',self._drag_comparison)
+        self.image_canvas.bind('<B1-Motion>',self._drag_comparison)
         self.preview_note=ttk.Label(right,text='Selecione uma pasta e carregue as fotos.',foreground=C['muted'])
         self.preview_note.pack(anchor='w',pady=(8,4))
+        slider_row=ttk.Frame(right);slider_row.pack(fill='x',pady=(5,3))
+        ttk.Checkbutton(slider_row,text='Comparar antes/depois',variable=self.compare_mode,command=self._redraw_preview).pack(side='left')
+        ttk.Scale(slider_row,from_=0,to=100,variable=self.comparison_fraction,command=lambda _value:self._redraw_preview()).pack(side='left',fill='x',expand=True,padx=(12,0))
+        self.resource_label=ttk.Label(right,text='CPU: —  ·  RAM: —  ·  GPU: não detectada',foreground=C['muted'])
+        self.resource_label.pack(anchor='w',pady=(10,0))
         ttk.Label(labs,text='Laboratório de resistência',font=('Segoe UI',21,'bold')).pack(anchor='w',pady=(0,10))
         ttk.Label(labs,text='Testes locais exploratórios. Nenhuma técnica garante impedir remoção por IA.',foreground=C['muted']).pack(anchor='w',pady=(0,16))
         for title,desc,action in [
@@ -145,7 +162,10 @@ class App(tk.Tk):
         self.log=tk.Text(footer,height=2,bg='#101A28',fg='#D1E5F3',insertbackground='white',relief='flat',font=('Consolas',9),padx=9,pady=7)
         self.log.pack(fill='x')
         self.log.insert('end','Markveil pronto. As fotografias originais nunca são modificadas.\n')
+        self.after(60,self._maximize_at_start)
         self.after(100,self.poll)
+        self.after(1000,self._update_resources)
+        self.after(100,self._enable_drop)
 
     def load_files(self):
         from .core import SUPPORTED
@@ -163,12 +183,16 @@ class App(tk.Tk):
             self._on_file_selected()
         else:
             self.preview_path=None
+            self.original_preview_path=None
+            self.protected_preview_path=None
             self._redraw_preview()
 
     def _on_file_selected(self,event=None):
         indexes=self.file_list.curselection()
         if indexes and indexes[0]<len(self.files):
             self.preview_path=self.files[indexes[0]]
+            self.original_preview_path=self.preview_path
+            self.protected_preview_path=None
             self.preview_note.configure(text=self.preview_path.name+'  ·  Original (sem prévia de proteção)')
             self._redraw_preview()
 
@@ -177,17 +201,136 @@ class App(tk.Tk):
         canvas.delete('all')
         w=max(canvas.winfo_width(),200)
         h=max(canvas.winfo_height(),180)
-        if not self.preview_path:
+        original=self.original_preview_path or self.preview_path
+        if not original:
             canvas.create_text(w//2,h//2,text='Suas fotografias aparecerão aqui',fill='#92A9C3',font=('Segoe UI',14))
             return
         try:
-            with Image.open(self.preview_path) as image:
-                img=image.copy()
-            img.thumbnail((max(w-30,100),max(h-30,100)),Image.Resampling.LANCZOS)
-            self.preview_image=ImageTk.PhotoImage(img,master=self)
+            with Image.open(original) as image:
+                base=image.convert('RGB')
+            base.thumbnail((max(w-30,100),max(h-30,100)),Image.Resampling.LANCZOS)
+            protected=self.protected_preview_path
+            if protected and self.compare_mode.get():
+                with Image.open(protected) as image:
+                    after=image.convert('RGB').resize(base.size,Image.Resampling.LANCZOS)
+                cut=round(base.width*self.comparison_fraction.get()/100)
+                base.paste(after.crop((cut,0,base.width,base.height)),(cut,0))
+                x0=(w-base.width)//2
+                canvas.create_line(x0+cut,(h-base.height)//2,x0+cut,(h+base.height)//2,fill='#4AC7B1',width=3)
+            elif protected:
+                with Image.open(protected) as image:
+                    base=image.convert('RGB')
+                base.thumbnail((max(w-30,100),max(h-30,100)),Image.Resampling.LANCZOS)
+            self.preview_image=ImageTk.PhotoImage(base,master=self)
             canvas.create_image(w//2,h//2,image=self.preview_image)
+            if protected and self.compare_mode.get():
+                x0=(w-base.width)//2
+                cut=round(base.width*self.comparison_fraction.get()/100)
+                canvas.create_line(x0+cut,(h-base.height)//2,x0+cut,(h+base.height)//2,fill='#4AC7B1',width=3)
+                canvas.create_text(12,12,anchor='nw',text='ORIGINAL  |  PROTEGIDA',fill='#4AC7B1',font=('Segoe UI',10,'bold'))
         except (OSError,ValueError) as exc:
             canvas.create_text(w//2,h//2,text=f'Não foi possível carregar: {exc}',fill='#FFB4B4')
+
+    def _drag_comparison(self,event):
+        if self.protected_preview_path and self.compare_mode.get():
+            width=max(self.image_canvas.winfo_width(),1)
+            self.comparison_fraction.set(max(0,min(100,100*event.x/width)))
+            self._redraw_preview()
+
+    def _maximize_at_start(self):
+        self.geometry('1350x850')
+        self.minsize(1060,700)
+        try:
+            if sys.platform.startswith('win'):
+                self.state('zoomed')
+            else:
+                self.attributes('-zoomed',True)
+        except tk.TclError:
+            pass
+
+    def _set_app_icon(self):
+        assets=Path(__file__).resolve().parent/'assets'
+        try:
+            if sys.platform.startswith('win') and (assets/'markveil.ico').exists():
+                self.iconbitmap(str(assets/'markveil.ico'))
+            elif (assets/'markveil.png').exists():
+                self._icon_photo=tk.PhotoImage(file=str(assets/'markveil.png'))
+                self.iconphoto(True,self._icon_photo)
+        except tk.TclError:
+            pass
+
+    def _preset_controls(self,parent):
+        row=ttk.Frame(parent);row.pack(fill='x',pady=(5,7))
+        self.preset_name=tk.StringVar(value='Meu preset')
+        ttk.Entry(row,textvariable=self.preset_name,width=17).pack(side='left',fill='x',expand=True)
+        ttk.Button(row,text='Salvar preset',command=self._save_preset).pack(side='left',padx=(5,0))
+        ttk.Button(row,text='Carregar',command=self._load_preset).pack(side='left',padx=(5,0))
+
+    def _save_preset(self):
+        try:
+            opts=self._build_processing_options()
+            save_preset(self.preset_name.get(),opts)
+            self.status.configure(text='Preset salvo no computador')
+        except (ValueError,OSError) as exc:
+            messagebox.showerror('Preset inválido',str(exc))
+
+    def _load_preset(self):
+        try:
+            from tkinter import simpledialog
+            names=list_presets()
+            if not names:
+                raise ValueError('Nenhum preset salvo ainda.')
+            name=simpledialog.askstring('Carregar preset','Presets: '+', '.join(names)+'\nDigite o nome:',initialvalue=names[0],parent=self)
+            if not name:return
+            opts=load_preset(name)
+            for field,value in [('mark',opts.text),('size',opts.max_size),('opacity',opts.opacity),('density',opts.density),('logo',opts.logo_path),('logo_scale',opts.logo_scale),('protection',opts.protection)]:
+                getattr(self,field).set(str(value))
+            self.grid_on.set(opts.grid)
+            self.preset_name.set(name)
+        except (ValueError,OSError) as exc:
+            messagebox.showerror('Preset indisponível',str(exc))
+
+    def _drop_area(self,parent):
+        self.drop_box=tk.Label(parent,text='⇩  Arraste fotos ou pastas aqui (quando disponível)',bg='#1B2B40',fg='#A9CBD4',font=('Segoe UI',9),pady=11)
+        self.drop_box.pack(fill='x',pady=(7,0))
+
+    def _enable_drop(self):
+        try:
+            from tkinterdnd2 import TkinterDnD, DND_FILES
+            # TkinterDnD initializes the tkdnd extension on an existing Tk root.
+            TkinterDnD._require(self)
+            self.drop_box.drop_target_register(DND_FILES)
+            self.drop_box.dnd_bind('<<Drop>>',self._on_drop)
+            self.drop_box.configure(text='⇩  Arraste fotografias ou uma pasta aqui')
+        except (ImportError,tk.TclError,RuntimeError):
+            self.drop_box.configure(text='Arrastar e soltar opcional: instale tkinterdnd2')
+
+    def _on_drop(self,event):
+        paths=[Path(p) for p in self.tk.splitlist(event.data)]
+        from .core import SUPPORTED
+        photos=[]
+        for path in paths:
+            if path.is_dir():
+                photos.extend(p for p in path.rglob('*') if p.is_file() and p.suffix.lower() in SUPPORTED)
+            elif path.is_file() and path.suffix.lower() in SUPPORTED:
+                photos.append(path)
+        photos=sorted(set(photos),key=str)
+        if not photos:return
+        self.files=photos
+        self.source.set(str(photos[0].parent))
+        self.file_list.delete(0,'end')
+        for photo in photos:self.file_list.insert('end',photo.name)
+        self.file_list.selection_set(0)
+        self._on_file_selected()
+        self.status.configure(text=f'{len(photos)} fotos arrastadas')
+
+    def _update_resources(self):
+        try:
+            data=sample_resources()
+            self.resource_label.configure(text=data['label'])
+        except Exception:
+            self.resource_label.configure(text='Monitor de recursos indisponível')
+        self.after(2000,self._update_resources)
 
     def _folder(self,frame,label,var):
         ttk.Label(frame,text=label).pack(anchor='w',pady=(6,3))
@@ -221,7 +364,9 @@ class App(tk.Tk):
                 self._preview_temp=tempfile.TemporaryDirectory(prefix='markveil-ui-')
             dest=Path(self._preview_temp.name)/'previa.jpg'
             create_preview(source,dest,options)
-            self.preview_path=dest
+            self.original_preview_path=source
+            self.protected_preview_path=dest
+            self.preview_path=source
             self.preview_note.configure(text=f'Prévia protegida de {source.name}  ·  {options.protection}')
             self._redraw_preview()
         except (ValueError,OSError,TypeError) as exc:

@@ -63,3 +63,10 @@ MIT. Refer to [LICENSE](LICENSE).
 Escolha a pasta de fotos, clique **CARREGAR FOTOGRAFIAS**, selecione uma imagem na lista e use **ATUALIZAR PRÉVIA**. A prévia aparece dentro da janela. **PROTEGER TODAS AS FOTOS** processa o lote e exibe progresso.
 
 O aplicativo não implementa arrastar e soltar nativo nesta versão; selecione a pasta pelo botão.
+
+
+## v0.11 — Desktop improvements
+
+Install optional desktop extras with `py -3 -m pip install -e ".[desktop]"` on Windows, then run `py -3 -m markveil.gui`. The application tries to launch maximized and includes before/after comparison slider, optional drag and drop, presets and optional resource metrics. The NVIDIA telemetry shows system-wide GPU utilization, **not GPU compute attributed to Markveil**; standard watermarking is CPU-based. GPU is used only for relevant experimental model runs when supported. CLI and MCP entrypoints remain unchanged.
+
+Windows exe: run `build_windows.bat` on Windows with Python installed. Generated executables have not been tested in this environment.

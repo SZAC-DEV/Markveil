@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "markveil"
-version = "0.10.0"
+version = "0.11.0"
 description = "Open-source photographic preview protection toolkit"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -21,6 +21,10 @@ markveil-mcp = "markveil.mcp_server:main"
 where = ["src"]
 
 [project.optional-dependencies]
+desktop = ["psutil>=5.9", "tkinterdnd2>=0.4"]
 mcp = ["mcp>=1.12,<2"]
 attack = ["opencv-python-headless>=4.8,<5", "numpy>=1.24,<3"]
 adversarial = ["torch>=2.1", "diffusers>=0.30", "transformers>=4.38,<5", "safetensors>=0.4", "accelerate>=0.25", "numpy>=1.24,<3"]
+
+[tool.setuptools.package-data]
+markveil = ["assets/*.ico", "assets/*.png"]

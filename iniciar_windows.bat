@@ -1,14 +1,12 @@
 @echo off
+setlocal
 cd /d "%~dp0"
-where py >nul 2>&1
-if %errorlevel%==0 (set "PY=py -3") else (set "PY=python")
-%PY% -m pip install -e .
-if errorlevel 1 goto error
-%PY% -m markveil.gui
-if errorlevel 1 goto error
+title Markveil Studio
+py -3 -m pip install -e ".[desktop]" || goto :error
+py -3 -m markveil.gui
+if errorlevel 1 goto :error
 exit /b 0
 :error
-echo.
-echo Houve um erro. Copie a mensagem acima para diagnostico.
+echo Falha ao iniciar Markveil.
 pause
 exit /b 1
