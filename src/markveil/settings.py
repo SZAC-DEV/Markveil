@@ -1,12 +1,24 @@
 """Persistent local settings for named preview profiles."""
 import json
 import os
+import sys
 from dataclasses import asdict
 from pathlib import Path
 from .core import Options
 
+def platform_config_dir():
+    """User-specific writable preferences location on Windows, macOS and Linux."""
+    override = os.environ.get('MARKVEIL_CONFIG_DIR')
+    if override:
+        return Path(override).expanduser()
+    if sys.platform == 'win32':
+        return Path(os.environ.get('APPDATA') or Path.home() / 'AppData' / 'Roaming') / 'Markveil'
+    if sys.platform == 'darwin':
+        return Path.home() / 'Library' / 'Application Support' / 'Markveil'
+    return Path(os.environ.get('XDG_CONFIG_HOME') or Path.home() / '.config') / 'markveil'
+
 def config_file():
-    root=Path(os.environ.get('APPDATA') or Path.home()/'.config')/'markveil'
+    root=platform_config_dir()
     return root/'presets.json'
 
 def _read():

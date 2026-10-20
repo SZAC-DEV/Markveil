@@ -72,7 +72,7 @@ class App(tk.Tk):
         brand=tk.Frame(header,bg=C['base']);brand.pack(side='left')
         tk.Label(brand,text='markveil',font=('Segoe UI',24,'bold'),bg=C['base'],fg=C['text']).pack(anchor='w')
         tk.Label(brand,text='PHOTO PROTECTION STUDIO  /  LOCAL FIRST',font=('Segoe UI',9),bg=C['base'],fg=C['muted']).pack(anchor='w')
-        tk.Label(header,text='OPEN SOURCE   ·   v0.11.0',font=('Segoe UI',10,'bold'),bg=C['base'],fg=C['accent']).pack(side='right')
+        tk.Label(header,text='OPEN SOURCE   ·   v0.12.0',font=('Segoe UI',10,'bold'),bg=C['base'],fg=C['accent']).pack(side='right')
         tabs=ttk.Notebook(self)
         tabs.pack(fill='both',expand=True,padx=22,pady=(0,8))
         protect=ttk.Frame(tabs,padding=15)
@@ -239,17 +239,22 @@ class App(tk.Tk):
 
     def _maximize_at_start(self):
         self.geometry('1350x850')
-        self.minsize(1060,700)
+        self.minsize(950,650)
         try:
             if sys.platform.startswith('win'):
                 self.state('zoomed')
+            elif sys.platform.startswith('linux'):
+                self.attributes('-zoomed', True)
             else:
-                self.attributes('-zoomed',True)
+                # macOS does not consistently support -zoomed; fit within display bounds.
+                self.update_idletasks()
+                w, h = self.winfo_screenwidth(), self.winfo_screenheight()
+                self.geometry(f'{max(900, w-70)}x{max(660, h-120)}+15+35')
         except tk.TclError:
-            pass
+            self.geometry('1200x760')
 
     def _set_app_icon(self):
-        assets=Path(__file__).resolve().parent/'assets'
+        assets=(Path(getattr(sys, '_MEIPASS'))/'markveil'/'assets' if getattr(sys, 'frozen', False) else Path(__file__).resolve().parent/'assets')
         try:
             if sys.platform.startswith('win') and (assets/'markveil.ico').exists():
                 self.iconbitmap(str(assets/'markveil.ico'))

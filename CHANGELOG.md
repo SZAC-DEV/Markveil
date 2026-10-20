@@ -1,3 +1,10 @@
+## v0.12.0
+- Inicializadores e scripts de build Linux/macOS.
+- Presets nos diretórios padrão de cada sistema operacional.
+- Maximização específica para Windows, Linux e macOS.
+- Matriz de CI Windows, Linux e macOS, com builds manuais.
+- CLI, MCP e motor de proteção mantidos.
+
 # Changelog
 
 ## 0.11.0

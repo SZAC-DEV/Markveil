@@ -70,3 +70,18 @@ O aplicativo não implementa arrastar e soltar nativo nesta versão; selecione a
 Install optional desktop extras with `py -3 -m pip install -e ".[desktop]"` on Windows, then run `py -3 -m markveil.gui`. The application tries to launch maximized and includes before/after comparison slider, optional drag and drop, presets and optional resource metrics. The NVIDIA telemetry shows system-wide GPU utilization, **not GPU compute attributed to Markveil**; standard watermarking is CPU-based. GPU is used only for relevant experimental model runs when supported. CLI and MCP entrypoints remain unchanged.
 
 Windows exe: run `build_windows.bat` on Windows with Python installed. Generated executables have not been tested in this environment.
+
+
+## v0.12 · Windows / Linux / macOS
+
+**Código único, builds nativos por sistema.** Python 3.10+ e Tk são necessários para rodar a interface a partir do código. Em algumas distribuições Linux é preciso instalar `python3-tk` pelo gerenciador de pacotes.
+
+- **Windows:** `iniciar_windows.bat`; `build_windows.bat` cria o EXE no próprio Windows.
+- **Linux:** `./iniciar_linux.sh`; `./build_linux.sh` gera um binário Linux. Pode requerer pacotes Tk e bibliotecas gráficas do sistema.
+- **macOS:** `./iniciar_macos.command` (ou `zsh iniciar_macos.command`); `./build_macos.sh` gera um `.app` **no próprio macOS**. Distribuição a outras pessoas requer assinatura e notarização Apple para evitar avisos Gatekeeper.
+- **CLI:** `markveil --help` em qualquer sistema; funciona em máquinas sem display.
+- **MCP:** `markveil mcp` em qualquer sistema, via stdio, quando o extra `[mcp]` estiver instalado.
+- **Presets:** `%APPDATA%\Markveil` (Windows), `~/Library/Application Support/Markveil` (macOS), `$XDG_CONFIG_HOME/markveil` ou `~/.config/markveil` (Linux). Override para testes: `MARKVEIL_CONFIG_DIR`.
+- **GPU:** métricas NVIDIA quando `nvidia-smi` estiver disponível. O processamento convencional usa CPU. Em Macs com Apple Silicon, o processamento adversarial requer validação específica de MPS, não garantida.
+
+O workflow do GitHub Actions executa testes nos três sistemas; builds podem ser criados manualmente com `workflow_dispatch`. Builds produzidos na CI **não** são automaticamente assinados, notarizados ou validados visualmente.
