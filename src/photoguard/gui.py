@@ -16,7 +16,7 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title('PhotoGuard · Preview Protection')
-        self.geometry('790x735')
+        self.geometry('790x785')
         self.configure(bg='#101827')
         self.q=queue.Queue()
         self.source=tk.StringVar()
@@ -62,6 +62,7 @@ class App(tk.Tk):
         ttk.Button(frame,text='COMPARAR 3 PERFIS',command=self.compare).pack(fill='x',pady=(8,0))
         ttk.Button(frame,text='AVALIAR RESISTÊNCIA A COMPRESSÃO (NÃO IA)',command=self.evaluate).pack(fill='x',pady=(8,0))
         ttk.Button(frame,text='TESTAR RESULTADO DE IA EXTERNA',command=self.external_attack).pack(fill='x',pady=(8,0))
+        ttk.Button(frame,text='PROTEÇÃO ADVERSARIAL EXPERIMENTAL (GPU/CPU)',command=self.adversarial_preview).pack(fill='x',pady=(8,0))
         self.go=ttk.Button(frame,text='GERAR PRÉVIAS PROTEGIDAS',command=self.start)
         self.go.pack(fill='x',pady=(15,10))
         self.log=tk.Text(frame,height=7,bg='#0b1220',fg='#d7e7ff',insertbackground='white',relief='flat',font=('Consolas',9))
@@ -155,6 +156,27 @@ class App(tk.Tk):
             messagebox.showinfo('Relatório criado',f"Abra {Path(target) / 'attack_report.html'} no navegador.\nMétricas de pixels não comprovam segurança.")
         except (ValueError,OSError,RuntimeError,TypeError) as exc:
             messagebox.showerror('Falha no laboratório',str(exc))
+
+    def adversarial_preview(self):
+        """Select an already-watermarked preview; use optional local VAE model."""
+        source=filedialog.askopenfilename(title='Escolha uma PRÉVIA já marcada (não o original)',filetypes=[('Imagens','*.jpg *.jpeg *.png *.webp')])
+        if not source:return
+        target=filedialog.asksaveasfilename(title='Salvar proteção experimental como PNG',defaultextension='.png',filetypes=[('PNG','*.png')],initialfile='previa-adversarial.png')
+        if not target:return
+        if Path(source).resolve()==Path(target).resolve():
+            messagebox.showerror('Erro','Não é permitido sobrescrever o arquivo de entrada.')
+            return
+        if not messagebox.askyesno('Recurso experimental','Usa PyTorch e um modelo VAE local (download inicial pode ser grande).\nNão garante impedir remoção por IA.\nExecutar?'):
+            return
+        self.log.insert('end','Iniciando proteção experimental...\n')
+        def work():
+            try:
+                from .adversarial import protect_preview
+                result=protect_preview(Path(source),Path(target))
+                self.q.put(('done',f"PNG experimental salvo: {result['output']}"))
+            except Exception as exc:
+                self.q.put(('error',f'Proteção adversarial: {exc}'))
+        threading.Thread(target=work,daemon=True).start()
 
     def start(self):
         try:

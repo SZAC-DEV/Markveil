@@ -1,3 +1,28 @@
+# PhotoGuard v0.6 — Módulo adversarial experimental
+
+**Novidade:** módulo opcional de perturbação adversarial de prévias, inspirado conceitualmente na pesquisa [MadryLab/photoguard](https://github.com/madrylab/photoguard). **Não incorpora código deles e NÃO reproduz fielmente seu encoder attack.** Este protótipo maximiza a distância entre representações latentes de um VAE pré-treinado, com perturbação limitada por `epsilon`. Nenhuma alegação de eficácia contra remoção de marcas d’água por IA foi validada.
+
+## Uso no Windows
+
+1. Para as funções normais, execute `iniciar_windows.bat` (continua leve, sem IA).
+2. Para a nova opção **PROTEÇÃO ADVERSARIAL EXPERIMENTAL**, instale manualmente em um terminal na pasta do programa:
+   `py -3 -m pip install -e ".[adversarial]"`
+3. Opcionalmente, instale PyTorch com suporte CUDA seguindo [as instruções oficiais](https://pytorch.org/get-started/locally/). A instalação genérica do pip pode não incluir a versão CUDA adequada. CPU funciona, mas é lenta.
+4. Gere uma prévia com marca d'água usando o PhotoGuard. Depois clique no botão experimental e selecione a **prévia**, nunca a foto original.
+5. A primeira execução baixa o VAE do Hugging Face; requer internet, armazenamento e respeito à licença do modelo. Depois o processamento é local.
+
+Também é possível usar:
+
+```powershell
+py -3 -m photoguard.adversarial "C:\Previas\foto.jpg" "C:\Previas\foto-protegida.png" --epsilon 6 --steps 20 --size 512 --device auto
+```
+
+**Limitações relevantes:** a imagem é redimensionada para até 512 pixels e cortada até múltiplos de 8; o resultado é PNG; otimizar contra um VAE não garante transferibilidade contra IAs modernas. Processamento pesado requer GPU ou tempo de CPU. A saída pode ficar pior após compressão/redimensionamento por plataformas comerciais. Nunca envie original ou arquivo já marcado para serviços que exijam o original intacto.
+
+**Para testar resistência real:** execute a ferramenta de remoção de sua escolha sobre as prévias e use o laboratório já existente em `TESTAR RESULTADO DE IA EXTERNA`. Não confunda alteração do embedding com resistência comprovada.
+
+---
+
 ## v0.4.2 — correção de inicialização
 
 Corrigido o conflito entre `App._options()` e `tkinter.Tk._options()`, que impedia a abertura da GUI no Python 3.13. Execute `iniciar_windows.bat` no Windows.
