@@ -6,6 +6,7 @@ from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
 import tempfile
+from .benchmark import benchmark_photo
 from .core import create_preview
 from .core import Options, process_directory
 
@@ -13,7 +14,7 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title('PhotoGuard · Preview Protection')
-        self.geometry('790x660')
+        self.geometry('790x735')
         self.configure(bg='#101827')
         self.q=queue.Queue()
         self.source=tk.StringVar()
@@ -53,6 +54,7 @@ class App(tk.Tk):
         ttk.Entry(frame,textvariable=self.logo_scale,width=12).pack(anchor='w')
         ttk.Checkbutton(frame,text='Adicionar grade geométrica de proteção',variable=self.grid_on).pack(anchor='w')
         ttk.Button(frame,text='VISUALIZAR PRIMEIRA FOTO',command=self.preview).pack(fill='x',pady=(12,0))
+        ttk.Button(frame,text='AVALIAR RESISTÊNCIA A COMPRESSÃO (NÃO IA)',command=self.evaluate).pack(fill='x',pady=(8,0))
         self.go=ttk.Button(frame,text='GERAR PRÉVIAS PROTEGIDAS',command=self.start)
         self.go.pack(fill='x',pady=(15,10))
         self.log=tk.Text(frame,height=7,bg='#0b1220',fg='#d7e7ff',insertbackground='white',relief='flat',font=('Consolas',9))
@@ -99,6 +101,22 @@ class App(tk.Tk):
             label.pack(padx=10,pady=10)
         except (ValueError,OSError,TypeError) as e:
             messagebox.showerror('Prévia indisponível',str(e))
+
+    def evaluate(self):
+        try:
+            options=self._options()
+            folder=Path(self.source.get())
+            from .core import SUPPORTED
+            photos=sorted(p for p in folder.rglob('*') if p.is_file() and p.suffix.lower() in SUPPORTED) if folder.is_dir() else []
+            if not photos:
+                raise ValueError('Escolha uma pasta de entrada com fotos.')
+            target=filedialog.askdirectory(title='Pasta para relatório (fora dos originais)')
+            if not target:
+                return
+            result=benchmark_photo(photos[0],Path(target),options)
+            messagebox.showinfo('Relatório salvo',f"Abra {Path(target) / 'index.html'} no navegador.\nAtenção: este teste não avalia remoção por IA.")
+        except (ValueError,OSError,TypeError) as exc:
+            messagebox.showerror('Falha na avaliação',str(exc))
 
     def start(self):
         try:

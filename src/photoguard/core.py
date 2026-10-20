@@ -139,7 +139,7 @@ def process_directory(input_dir: Path, output_dir: Path, options: Options, progr
     if input_dir == output_dir or output_dir.is_relative_to(input_dir):
         raise ValueError('Saída deve ficar fora da pasta dos originais para impedir reprocessamento.')
     photos = sorted(p for p in input_dir.rglob('*') if p.is_file() and p.suffix.lower() in SUPPORTED)
-    report = {'version':'0.2.0','images':[],'errors':[],'count':len(photos)}
+    report = {'version':'0.3.0','images':[],'errors':[],'count':len(photos)}
     for index, photo in enumerate(photos, 1):
         relative = photo.relative_to(input_dir)
         # Preserve folder hierarchy; include source extension to avoid JPG/PNG filename collisions.

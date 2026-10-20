@@ -1,8 +1,22 @@
 import argparse
+import json
+from .benchmark import benchmark_photo
 from pathlib import Path
 from .core import Options, process_directory
 
 def main():
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == 'benchmark':
+        check=argparse.ArgumentParser(description='Avaliação local de compressão e redimensionamento (não IA)')
+        check.add_argument('command', choices=['benchmark'])
+        check.add_argument('photo', type=Path)
+        check.add_argument('output', type=Path)
+        check.add_argument('--logo', default='')
+        check.add_argument('--text', default='PRÉVIA • NÃO COMPRADA')
+        args=check.parse_args()
+        result=benchmark_photo(args.photo,args.output,Options(text=args.text,logo_path=args.logo))
+        print(json.dumps(result,ensure_ascii=False,indent=2))
+        return
     parser=argparse.ArgumentParser(description='PhotoGuard: prévias protegidas para fotógrafos')
     parser.add_argument('input',type=Path,help='Pasta com originais')
     parser.add_argument('output',type=Path,help='Pasta diferente, para prévias')

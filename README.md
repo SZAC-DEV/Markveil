@@ -75,3 +75,15 @@ python -m unittest discover -s tests -v
 
 ## Contribuição e licença
 Issues, PRs e testes de campo são bem-vindos. MIT — consulte LICENSE.
+
+## Versão 0.3 — Avaliação local de transformações
+
+O botão **AVALIAR RESISTÊNCIA A COMPRESSÃO (NÃO IA)** escolhe a primeira fotografia da pasta e cria `index.html`, `benchmark.json` e quatro imagens para comparação em uma pasta externa à origem. O relatório mede diferença média de pixels na prévia, após duas compressões JPEG e redução de 50% da resolução. **Não é teste de remoção por IA, não mede se texto continua legível e não comprova resistência adversarial.**
+
+Na linha de comando:
+
+```powershell
+photoguard benchmark "C:\Fotos\ensaio.jpg" "C:\Relatorios\ensaio" --text "PRÉVIA NÃO COMPRADA"
+```
+
+A pasta de relatório precisa ficar fora da pasta da foto original. Não há upload externo, reconhecimento facial ou conexão com plataformas comerciais. Integração com Fotto, Fotop e Banlek permanece condicionada às APIs e políticas oficiais.
