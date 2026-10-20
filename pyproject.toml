@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "photoguard-open"
-version = "0.4.0"
+version = "0.4.2"
 description = "Open-source photographic preview protection toolkit"
 readme = "README.md"
 requires-python = ">=3.10"

@@ -77,14 +77,14 @@ class App(tk.Tk):
         ttk.Entry(line,textvariable=var).pack(side='left',fill='x',expand=True)
         ttk.Button(line,text='PNG...',command=lambda:var.set(filedialog.askopenfilename(filetypes=[('PNG','*.png')]) or var.get())).pack(side='right',padx=(7,0))
 
-    def _options(self):
+    def _build_processing_options(self):
         opts=Options(text=self.mark.get(),max_size=int(self.size.get()),opacity=int(self.opacity.get()),density=int(self.density.get()),grid=self.grid_on.get(),logo_path=self.logo.get(),logo_scale=int(self.logo_scale.get()))
         opts.validate()
         return opts
 
     def preview(self):
         try:
-            options=self._options()
+            options=self._build_processing_options()
             folder=Path(self.source.get())
             from .core import SUPPORTED
             photos=sorted(p for p in folder.rglob('*') if p.is_file() and p.suffix.lower() in SUPPORTED) if folder.is_dir() else []
@@ -106,7 +106,7 @@ class App(tk.Tk):
 
     def evaluate(self):
         try:
-            options=self._options()
+            options=self._build_processing_options()
             folder=Path(self.source.get())
             from .core import SUPPORTED
             photos=sorted(p for p in folder.rglob('*') if p.is_file() and p.suffix.lower() in SUPPORTED) if folder.is_dir() else []
@@ -122,7 +122,7 @@ class App(tk.Tk):
 
     def external_attack(self):
         try:
-            options=self._options()
+            options=self._build_processing_options()
             folder=Path(self.source.get())
             from .core import SUPPORTED
             photos=sorted(p for p in folder.rglob('*') if p.is_file() and p.suffix.lower() in SUPPORTED) if folder.is_dir() else []
@@ -138,7 +138,7 @@ class App(tk.Tk):
 
     def start(self):
         try:
-            options=self._options()
+            options=self._build_processing_options()
             inp=Path(self.source.get()).resolve()
             out=Path(self.target.get()).resolve()
             if not inp.is_dir() or inp==out or out.is_relative_to(inp):

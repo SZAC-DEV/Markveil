@@ -1,3 +1,9 @@
+## v0.4.2 — correção de inicialização
+
+Corrigido o conflito entre `App._options()` e `tkinter.Tk._options()`, que impedia a abertura da GUI no Python 3.13. Execute `iniciar_windows.bat` no Windows.
+
+**Nota:** esta correção foi validada com testes automatizados e verificação estática; não foi testada com exibição gráfica real em Windows.
+
 # PhotoGuard 🛡️
 
 **Ferramenta open source para gerar prévias fotográficas com marcas d'água reforçadas, sem alterar os originais.**
