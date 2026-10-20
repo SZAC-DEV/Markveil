@@ -21,7 +21,7 @@ def main():
             try:
                 installed_version = version('markveil')
             except Exception:
-                installed_version = '0.10.0 (source checkout)'
+                installed_version = '0.13.0 (source checkout)'
             print('Markveil', installed_version)
             return
         # protect is a readable alias for the original directory processing command
