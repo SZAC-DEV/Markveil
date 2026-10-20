@@ -2,9 +2,11 @@
 
 **Ferramenta open source para gerar prévias fotográficas com marcas d'água reforçadas, sem alterar os originais.**
 
-> **Aviso:** nenhuma marca d'água visível garante proteção contra remoção por IA. A v0.1 utiliza texto distribuído, grades e redução de resolução. Não implementa proteção adversarial validada. Não é uma plataforma de vendas e não contorna políticas de terceiros.
+> **Aviso:** nenhuma marca d'água visível garante proteção contra remoção por IA. A v0.2 utiliza texto distribuído, grades e redução de resolução. Não implementa proteção adversarial validada. Não é uma plataforma de vendas e não contorna políticas de terceiros.
 
-## Funcionalidades (v0.1)
+## Funcionalidades (v0.2)
+- PNG transparente personalizado repetido na prévia, com escala e opacidade ajustáveis.
+- Botão de visualização da primeira foto antes de processar a pasta.
 - Interface desktop com Tkinter (Windows/Linux/macOS com Tk disponível).
 - Linha de comando para processamento em lote, inclusive subpastas.
 - Marca d'água textual repetida e girada, com grade geométrica opcional.
@@ -29,7 +31,7 @@ Se `photoguard-gui` não estiver disponível, execute `python -m photoguard.gui`
 
 ## Linha de comando
 ```bash
-photoguard "C:/Fotos/Originais" "C:/Fotos/Previas" --text "© Meu Estúdio · PRÉVIA" --size 1100 --density 5 --opacity 145
+photoguard "C:/Fotos/Originais" "C:/Fotos/Previas" --text "© Meu Estúdio · PRÉVIA" --size 1100 --density 5 --opacity 145 --logo "C:/Fotos/logo.png" --logo-scale 30
 ```
 
 Detalhes: `photoguard --help`.
@@ -48,7 +50,7 @@ O executável ficará em `dist/PhotoGuard.exe`. O arquivo `launcher.py` já est�
 
 | Plataforma | Estado no projeto |
 |---|---|
-| Fotop | Exportar marca PNG é uma possível integração futura; a v0.1 **não** gera PNG de marca para envio à plataforma. |
+| Fotop | Exportar marca PNG é uma possível integração futura; a v0.2 usa PNG como sobreposição nas prévias, mas **não** gera modelos especiais para envio à plataforma. |
 | Banlek | **Não enviar** arquivos já marcados; os termos proíbem e a plataforma aplica sua proteção. Sem integração nesta versão. |
 | Fotto | Fluxo externo não integrado; verifique suporte oficial para prévias customizadas. |
 | Outros sites | É possível usar as prévias onde o serviço admite imagem de prévia diferente do original; caso contrário, não existe integração automática. |
@@ -61,7 +63,7 @@ O executável ficará em `dist/PhotoGuard.exe`. O arquivo `launcher.py` já est�
 - Recomenda-se manter cópias de segurança dos originais, separadas da pasta de processamento.
 
 ## Próximos marcos
-- v0.2: marcas d'água PNG personalizadas, templates configuráveis e exportação de marca PNG para plataformas compatíveis.
+- v0.3: templates configuráveis e exportação de marca PNG para plataformas compatíveis.
 - v0.3: testes padronizados contra inpainting, remoção por IA e compressão, com métricas antes de alegar resistência.
 - v0.4: API local e adaptadores oficiais conforme contratos das plataformas.
 

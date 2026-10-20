@@ -37,3 +37,18 @@ class TestCore(unittest.TestCase):
             self.assertTrue((out/'same_png_preview.jpg').exists())
 
 if __name__=='__main__':unittest.main()
+
+class TestCustomLogo(unittest.TestCase):
+    def test_logo_overlay_preserves_input(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            src=root/'photo.jpg'; dst=root/'marked.jpg'; logo=root/'logo.png'
+            Image.new('RGB',(500,400),'gray').save(src)
+            Image.new('RGBA',(100,40),(255,40,30,255)).save(logo)
+            before=_sha256(src)
+            create_preview(src,dst,Options(text='TESTE',logo_path=str(logo),logo_scale=30,grid=False))
+            self.assertEqual(_sha256(src),before)
+            self.assertTrue(dst.exists())
+    def test_missing_png_rejected(self):
+        with self.assertRaises(ValueError):
+            Options(logo_path='/does-not-exist.png').validate()

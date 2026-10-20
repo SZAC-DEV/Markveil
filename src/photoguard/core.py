@@ -20,6 +20,8 @@ class Options:
     density: int = 4
     quality: int = 76
     grid: bool = True
+    logo_path: str = ''  # Optional transparent PNG, repeated as overlay
+    logo_scale: int = 32  # Percentage of preview width per watermark tile
     blur: float = 0.0  # Reserved for later experimental processing; intentionally unused
 
     def validate(self):
@@ -31,6 +33,10 @@ class Options:
             raise ValueError('Opacidade deve ser de 30 a 240.')
         if not 2 <= self.density <= 9:
             raise ValueError('Densidade deve ser de 2 a 9.')
+        if not 10 <= self.logo_scale <= 65:
+            raise ValueError('Escala da marca PNG deve ser de 10 a 65%.')
+        if self.logo_path and (not Path(self.logo_path).is_file() or Path(self.logo_path).suffix.lower() != '.png'):
+            raise ValueError('A marca personalizada precisa ser um arquivo PNG existente.')
         if not 40 <= self.quality <= 95:
             raise ValueError('Qualidade deve ser de 40 a 95.')
 
@@ -81,6 +87,22 @@ def create_preview(source: Path, destination: Path, options: Options) -> dict:
     for row, y in enumerate(range(-rh, h+rh, cell_h)):
         for x in range(-rw, w+rw, cell_w*2):
             overlay.alpha_composite(rotated, (x + (cell_w if row%2 else 0), y))
+    if options.logo_path:
+        # Repeat the photographer's transparent PNG across the preview.
+        with Image.open(options.logo_path) as logo_file:
+            logo = logo_file.convert('RGBA')
+        if not logo.width or not logo.height:
+            raise ValueError('Marca PNG vazia.')
+        tile_width = max(30, int(w * options.logo_scale / 100))
+        tile_height = max(1, round(logo.height * tile_width / logo.width))
+        logo = logo.resize((tile_width, tile_height), Image.Resampling.LANCZOS)
+        alpha = logo.getchannel('A').point(lambda a: a * options.opacity // 255)
+        logo.putalpha(alpha)
+        pitch_x = max(1, int(tile_width * 1.4))
+        pitch_y = max(1, int(tile_height * 1.8))
+        for row, y in enumerate(range(-tile_height, h + tile_height, pitch_y)):
+            for x in range(-tile_width, w + tile_width, pitch_x):
+                overlay.alpha_composite(logo, (x + (pitch_x // 2 if row % 2 else 0), y))
     if options.grid:
         grid = ImageDraw.Draw(overlay)
         # Slight irregular line placement to increase the cost of simple cloning.
@@ -117,7 +139,7 @@ def process_directory(input_dir: Path, output_dir: Path, options: Options, progr
     if input_dir == output_dir or output_dir.is_relative_to(input_dir):
         raise ValueError('Saída deve ficar fora da pasta dos originais para impedir reprocessamento.')
     photos = sorted(p for p in input_dir.rglob('*') if p.is_file() and p.suffix.lower() in SUPPORTED)
-    report = {'version':'0.1.0','images':[],'errors':[],'count':len(photos)}
+    report = {'version':'0.2.0','images':[],'errors':[],'count':len(photos)}
     for index, photo in enumerate(photos, 1):
         relative = photo.relative_to(input_dir)
         # Preserve folder hierarchy; include source extension to avoid JPG/PNG filename collisions.
