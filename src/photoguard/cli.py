@@ -8,6 +8,22 @@ from .core import Options, process_directory
 
 def main():
     import sys
+    if len(sys.argv) > 1 and sys.argv[1] == 'gallery-test':
+        from .gallery_lab import gallery_test
+        lab = argparse.ArgumentParser(description='Simula compressão e redimensionamento de galerias (NÃO testa remoção por IA)')
+        lab.add_argument('command', choices=['gallery-test'])
+        lab.add_argument('photo', type=Path)
+        lab.add_argument('output', type=Path)
+        lab.add_argument('--text', default='PRÉVIA • NÃO COMPRADA')
+        lab.add_argument('--logo', default='')
+        lab.add_argument('--protection', choices=['classic','adaptive','strong'], default='adaptive')
+        args = lab.parse_args()
+        try:
+            report = gallery_test(args.photo, args.output, Options(text=args.text, logo_path=args.logo, protection=args.protection))
+        except (ValueError, OSError, RuntimeError) as exc:
+            lab.error(str(exc))
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        return
     if len(sys.argv) > 1 and sys.argv[1] == 'attack-test':
         check=argparse.ArgumentParser(description='Laboratório: ataque externo ou inpainting clássico local')
         check.add_argument('command', choices=['attack-test'])

@@ -8,6 +8,7 @@ from PIL import Image, ImageTk
 import tempfile
 from .comparison import compare_profiles
 from .benchmark import benchmark_photo
+from .gallery_lab import gallery_test
 from .attack_lab import attack_test
 from .core import create_preview
 from .core import Options, process_directory
@@ -16,7 +17,7 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title('PhotoGuard · Preview Protection')
-        self.geometry('790x785')
+        self.geometry('790x850')
         self.configure(bg='#101827')
         self.q=queue.Queue()
         self.source=tk.StringVar()
@@ -61,6 +62,7 @@ class App(tk.Tk):
         ttk.Button(frame,text='VISUALIZAR PRIMEIRA FOTO',command=self.preview).pack(fill='x',pady=(12,0))
         ttk.Button(frame,text='COMPARAR 3 PERFIS',command=self.compare).pack(fill='x',pady=(8,0))
         ttk.Button(frame,text='AVALIAR RESISTÊNCIA A COMPRESSÃO (NÃO IA)',command=self.evaluate).pack(fill='x',pady=(8,0))
+        ttk.Button(frame,text='SIMULAR PUBLICAÇÃO EM GALERIAS (NÃO IA)',command=self.gallery_lab).pack(fill='x',pady=(8,0))
         ttk.Button(frame,text='TESTAR RESULTADO DE IA EXTERNA',command=self.external_attack).pack(fill='x',pady=(8,0))
         ttk.Button(frame,text='PROTEÇÃO ADVERSARIAL EXPERIMENTAL (GPU/CPU)',command=self.adversarial_preview).pack(fill='x',pady=(8,0))
         self.go=ttk.Button(frame,text='GERAR PRÉVIAS PROTEGIDAS',command=self.start)
@@ -140,6 +142,24 @@ class App(tk.Tk):
             messagebox.showinfo('Relatório salvo',f"Abra {Path(target) / 'index.html'} no navegador.\nAtenção: este teste não avalia remoção por IA.")
         except (ValueError,OSError,TypeError) as exc:
             messagebox.showerror('Falha na avaliação',str(exc))
+
+    def gallery_lab(self):
+        try:
+            opts = self._build_processing_options()
+            from .core import SUPPORTED
+            folder = Path(self.source.get())
+            photos = sorted(p for p in folder.rglob('*') if p.is_file() and p.suffix.lower() in SUPPORTED) if folder.is_dir() else []
+            if not photos:
+                raise ValueError('Selecione uma pasta com fotos.')
+            target = filedialog.askdirectory(title='Pasta para o relatório (fora dos originais)')
+            if not target:
+                return
+            import webbrowser
+            result = gallery_test(photos[0], Path(target), opts)
+            webbrowser.open((Path(target) / 'index.html').resolve().as_uri())
+            messagebox.showinfo('Gallery Lab', 'Relatório gerado. Não comprova resistência à IA.')
+        except (ValueError, OSError, RuntimeError) as exc:
+            messagebox.showerror('Gallery Lab', str(exc))
 
     def external_attack(self):
         try:

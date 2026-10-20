@@ -165,3 +165,16 @@ Os perfis adicionam **obstrução visual** às prévias. **Não são perturbaç�
 
 ### Comparar perfis lado a lado
 Na interface, clique em **COMPARAR 3 PERFIS**. Uma montagem JPEG é salva com os perfis clássico, adaptativo e forte. Também disponível pelo terminal: `photoguard compare foto.jpg comparacao.jpg`.
+
+## v0.7.0 — Gallery Lab (simulação de publicação)
+
+Adicionado o comando `gallery-test` e o botão **SIMULAR PUBLICAÇÃO EM GALERIAS (NÃO IA)**.
+O laboratório simula JPEG com qualidades 85, 60 e 35, além de redimensionamentos a 75% e 50% combinados com JPEG. Aplica as **mesmas** transformações a versões marcadas e limpas da fotografia para estimar a diferença residual por MAE (0–255). Cria `index.html` e `gallery-report.json`, com prévias marcadas; **não exporta fotos originais** para a pasta do relatório.
+
+```powershell
+photoguard gallery-test "C:\Fotos\foto.jpg" "C:\RelatorioGallery" --protection strong
+```
+
+**Limitações:** diferença de pixels não demonstra a legibilidade da marca d’água ou eficácia contra qualquer modelo de IA. Nenhum modelo generativo é usado nesse teste. O PhotoGuard não integra automaticamente as galerias Fotto, Banlek ou Fotop e não altera suas prévias remotamente. O módulo adversarial da v0.6 continua opcional, sem comprovação experimental de eficácia contra modelos atuais.
+
+**Para desenvolvedores:** rode `python -m pip install -e ".[attack]"` e `python -m pytest -q` (instale `pytest` se necessário). O aplicativo é iniciado com `iniciar_windows.bat` no Windows ou `python -m photoguard.gui`. A interface gráfica deve ser validada em uma sessão desktop real no Windows; a suíte automatizada não substitui essa validação.
