@@ -57,3 +57,9 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md). Changes should include tests and avoid 
 ## License
 
 MIT. Refer to [LICENSE](LICENSE).
+
+
+## Interface v0.10.0
+Escolha a pasta de fotos, clique **CARREGAR FOTOGRAFIAS**, selecione uma imagem na lista e use **ATUALIZAR PRÉVIA**. A prévia aparece dentro da janela. **PROTEGER TODAS AS FOTOS** processa o lote e exibe progresso.
+
+O aplicativo não implementa arrastar e soltar nativo nesta versão; selecione a pasta pelo botão.
