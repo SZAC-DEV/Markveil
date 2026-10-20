@@ -7,6 +7,7 @@ from tkinter import filedialog, messagebox, ttk
 from PIL import Image, ImageTk
 import tempfile
 from .benchmark import benchmark_photo
+from .attack_lab import attack_test
 from .core import create_preview
 from .core import Options, process_directory
 
@@ -55,6 +56,7 @@ class App(tk.Tk):
         ttk.Checkbutton(frame,text='Adicionar grade geométrica de proteção',variable=self.grid_on).pack(anchor='w')
         ttk.Button(frame,text='VISUALIZAR PRIMEIRA FOTO',command=self.preview).pack(fill='x',pady=(12,0))
         ttk.Button(frame,text='AVALIAR RESISTÊNCIA A COMPRESSÃO (NÃO IA)',command=self.evaluate).pack(fill='x',pady=(8,0))
+        ttk.Button(frame,text='TESTAR RESULTADO DE IA EXTERNA',command=self.external_attack).pack(fill='x',pady=(8,0))
         self.go=ttk.Button(frame,text='GERAR PRÉVIAS PROTEGIDAS',command=self.start)
         self.go.pack(fill='x',pady=(15,10))
         self.log=tk.Text(frame,height=7,bg='#0b1220',fg='#d7e7ff',insertbackground='white',relief='flat',font=('Consolas',9))
@@ -117,6 +119,22 @@ class App(tk.Tk):
             messagebox.showinfo('Relatório salvo',f"Abra {Path(target) / 'index.html'} no navegador.\nAtenção: este teste não avalia remoção por IA.")
         except (ValueError,OSError,TypeError) as exc:
             messagebox.showerror('Falha na avaliação',str(exc))
+
+    def external_attack(self):
+        try:
+            options=self._options()
+            folder=Path(self.source.get())
+            from .core import SUPPORTED
+            photos=sorted(p for p in folder.rglob('*') if p.is_file() and p.suffix.lower() in SUPPORTED) if folder.is_dir() else []
+            if not photos: raise ValueError('Selecione uma pasta com fotos originais.')
+            attacked=filedialog.askopenfilename(title='Foto após remoção por IA',filetypes=[('Imagens','*.jpg *.jpeg *.png *.webp')])
+            if not attacked: return
+            target=filedialog.askdirectory(title='Pasta do relatório (fora dos originais)')
+            if not target:return
+            attack_test(photos[0],Path(target),options,attacked=Path(attacked))
+            messagebox.showinfo('Relatório criado',f"Abra {Path(target) / 'attack_report.html'} no navegador.\nMétricas de pixels não comprovam segurança.")
+        except (ValueError,OSError,RuntimeError,TypeError) as exc:
+            messagebox.showerror('Falha no laboratório',str(exc))
 
     def start(self):
         try:

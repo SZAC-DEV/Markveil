@@ -1,11 +1,30 @@
 import argparse
 import json
 from .benchmark import benchmark_photo
+from .attack_lab import attack_test
 from pathlib import Path
 from .core import Options, process_directory
 
 def main():
     import sys
+    if len(sys.argv) > 1 and sys.argv[1] == 'attack-test':
+        check=argparse.ArgumentParser(description='Laboratório: ataque externo ou inpainting clássico local')
+        check.add_argument('command', choices=['attack-test'])
+        check.add_argument('photo', type=Path)
+        check.add_argument('output', type=Path)
+        choice=check.add_mutually_exclusive_group(required=True)
+        choice.add_argument('--attacked', type=Path, help='Imagem após processamento por IA externa')
+        choice.add_argument('--local-inpaint',action='store_true',help='Inpainting clássico OpenCV, NÃO IA generativa')
+        check.add_argument('--mask',type=Path,help='Máscara do ataque em escala de cinza, branco=região removida')
+        check.add_argument('--text',default='PRÉVIA • NÃO COMPRADA')
+        check.add_argument('--logo',default='')
+        args=check.parse_args()
+        try:
+            result=attack_test(args.photo,args.output,Options(text=args.text,logo_path=args.logo),args.attacked,args.local_inpaint,args.mask)
+        except (ValueError,OSError,RuntimeError) as exc:
+            check.error(str(exc))
+        print(json.dumps(result,ensure_ascii=False,indent=2))
+        return
     if len(sys.argv) > 1 and sys.argv[1] == 'benchmark':
         check=argparse.ArgumentParser(description='Avaliação local de compressão e redimensionamento (não IA)')
         check.add_argument('command', choices=['benchmark'])
